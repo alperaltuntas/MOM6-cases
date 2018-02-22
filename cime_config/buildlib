@@ -27,11 +27,40 @@ def _main_func():
 
     with Case(caseroot) as case:
 
-        casetools = case.get_value("CASETOOLS")
-        srcroot = case.get_value("SRCROOT")
-        gmake_j = case.get_value("GMAKE_J")
-        gmake = case.get_value("GMAKE")
-        mach = case.get_value("MACH")
+        casetools   = case.get_value("CASETOOLS")
+        srcroot     = case.get_value("SRCROOT")
+        gmake_j     = case.get_value("GMAKE_J")
+        gmake       = case.get_value("GMAKE")
+        mach        = case.get_value("MACH")
+
+
+        #-------------------------------------------------------
+        # Input handling
+        #-------------------------------------------------------
+        casename        = case.get_value("CASE")
+        gridname        = case.get_value("GRID")
+        rundir          = case.get_value("RUNDIR")
+        atm_gridname    = case.get_value("ATM_GRID")
+        ocn_gridname    = case.get_value("OCN_GRID")
+
+        resolution = None
+        if (atm_gridname=="T62" and ocn_gridname=="gx1v6"):
+            resolution = "T62_g16"
+        elif (atm_gridname=="T62" and ocn_gridname=="tx0.66v1"):
+            resolution = "T62_t061"
+
+        expect(resolution != None, "Couldn't find input files for %s" % (gridname))
+
+        logger.info("Copying input files for %s\n"%(resolution))
+        input_dir = os.path.join(srcroot,"components","mom","cesm",resolution)
+        input_files = ["diag_table", "input.nml", "MOM_input", "MOM_override"]
+        for input_file_name in input_files:
+            input_file_path = os.path.join(input_dir,input_file_name)
+            if not os.path.exists(input_file_path):
+                expect(False, "Couldn't find "+input_file_path)
+
+            run_cmd("cp "+input_file_path+" "+rundir)
+
 
         #-------------------------------------------------------
         # create Filepath file for mom
